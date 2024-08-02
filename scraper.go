@@ -1,23 +1,27 @@
 package main
 
 import (
-	"strconv"
-	"strings"
+	"bufio"
+	"log"
+	"os"
 
 	"github.com/gocolly/colly"
 
 	"fmt"
 )
 
-type manga struct {
-	url             string
-	manga           string
-	ultimo_capitulo float64
+type Ultimo_capitulo struct {
+	Url             string
+	Manga           string
+	Ultimo_capitulo float64
+}
+
+type Capitulo struct {
+	Manga    string
+	Capitulo float64
 }
 
 func main() {
-
-	var capitulos []float64
 
 	c := colly.NewCollector()
 
@@ -33,9 +37,12 @@ func main() {
 		fmt.Println("Visitado ", r.Request.URL)
 	})
 
-	c.OnHTML(".chapter-name", func(e *colly.HTMLElement) {
-		//e.Request.Visit(e.Attr("href"))
-		//manga := manga{}
+	c.OnHTML("", func(e *colly.HTMLElement) {
+		fmt.Println(e)
+
+		/*manga := Capitulo{}
+
+		fmt.Println(e.Attr("title"))
 
 		capitulo := e.Text[8:]
 
@@ -47,8 +54,18 @@ func main() {
 			// ... handle error
 			panic(err)
 		}
+		manga.Manga = "teste"
+		manga.Capitulo = capitulo_numero
 
-		capitulos = append(capitulos, capitulo_numero)
+		content, err := json.Marshal(manga)
+		if err != nil {
+			fmt.Println(err)
+		}
+		err = os.WriteFile("teste.json", content, 0644)
+		if err != nil {
+			log.Fatal(err)
+		}*/
+
 	})
 
 	c.OnScraped(func(r *colly.Response) {
@@ -59,6 +76,22 @@ func main() {
 		fmt.Println("Got a response from", r.Request.URL)
 	})*/
 
-	c.Visit("https://chapmanganelo.com/manga-lu126440")
-	fmt.Println(capitulos)
+	//Abre arquivo com as URLs
+	mangas, err := os.Open("mangas.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer mangas.Close()
+
+	//Verifica linha a linha
+	scanner := bufio.NewScanner(mangas)
+	for scanner.Scan() {
+		fmt.Println(scanner.Text())
+		c.Visit(scanner.Text())
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+
 }
